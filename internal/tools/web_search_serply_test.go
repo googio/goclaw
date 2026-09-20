@@ -161,7 +161,7 @@ func TestSerplySearchPropagatesCancellation(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
 	defer cancel()
-	client := &http.Client{Transport: parallelRoundTripFunc(func(req *http.Request) (*http.Response, error) {
+	client := &http.Client{Transport: serplyRoundTripFunc(func(req *http.Request) (*http.Response, error) {
 		<-req.Context().Done()
 		return nil, req.Context().Err()
 	})}
@@ -186,4 +186,10 @@ func TestSerplyProviderIsInDefaultOrder(t *testing.T) {
 	if provider := buildProviderByName(searchProviderSerply, "k", 3); provider == nil || provider.Name() != searchProviderSerply {
 		t.Fatalf("serply provider construction failed: %T", provider)
 	}
+}
+
+type serplyRoundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f serplyRoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
 }
